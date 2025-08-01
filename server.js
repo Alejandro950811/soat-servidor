@@ -46,8 +46,15 @@ app.get('/respuesta/:placa', (req, res) => {
   }
 });
 
-// ✅ Corrección para Railway
+// 5. Admin limpia todas las placas pendientes
+app.post('/limpiar', (req, res) => {
+  cotizacionesPendientes = [];
+  res.json({ status: 'todas las placas eliminadas' });
+});
+
+// ✅ Corrección para Railway / despliegue
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
 });
+
