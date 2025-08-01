@@ -46,7 +46,8 @@ app.get('/respuesta/:placa', (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('✅ Servidor escuchando en http://localhost:3000');
+// ✅ Corrección para Railway
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
 });
-
