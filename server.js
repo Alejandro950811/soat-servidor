@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 
 // Datos en memoria
-let cotizacionesPendientes = []; // [{ placa, timestamp }]
+let cotizacionesPendientes = []; // [{ placa, timestamp, respondida }]
 let respuestas = {};             // { 'ABC123': { valor, resumenHTML } }
 let usuarios = {
   admin: 'Admin2025.'           // Usuario principal
@@ -17,7 +17,6 @@ app.post('/solicitar', (req, res) => {
   const { placa } = req.body;
   if (!placa) return res.status(400).json({ error: 'Placa requerida' });
 
-  // Agregar a pendientes
   cotizacionesPendientes.push({ placa, timestamp: Date.now(), respondida: false });
   res.json({ status: 'ok' });
 });
@@ -36,7 +35,7 @@ app.post('/responder', (req, res) => {
 
   respuestas[placa] = { valor, resumenHTML };
 
-  // Marcar como respondida sin eliminarla del arreglo
+  // Marcar como respondida
   cotizacionesPendientes = cotizacionesPendientes.map(p =>
     p.placa === placa ? { ...p, respondida: true } : p
   );
@@ -54,10 +53,15 @@ app.get('/respuesta/:placa', (req, res) => {
   }
 });
 
-/* === 5. Limpiar todas las placas pendientes === */
-app.post('/limpiar', (req, res) => {
+/* === 5. Eliminar todas las placas pendientes (solo admin) === */
+app.delete('/pendientes', (req, res) => {
+  const { usuario } = req.body;
+  if (usuario !== 'admin') {
+    return res.status(403).json({ error: 'Solo admin puede limpiar las placas.' });
+  }
+
   cotizacionesPendientes = [];
-  res.json({ status: 'todas las placas eliminadas' });
+  res.json({ ok: true, mensaje: 'Todas las placas eliminadas' });
 });
 
 /* === 6. Login de usuarios === */
@@ -110,6 +114,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Servidor escuchando en el puerto ${PORT}`);
 });
+
+
 
 
 
