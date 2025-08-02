@@ -98,9 +98,10 @@ app.delete('/usuarios/:usuario', (req, res) => {
   }
 });
 
-// ✅ Corrección para Railway / despliegue
+// ✅ Railway: usar el puerto dinámico
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`✅ Servidor escuchando en el puerto ${PORT}`);
 });
+
 
