@@ -2,48 +2,32 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-let cotizacionesPendientes = []; // [{ placa, timestamp, asignadoA }]
+let cotizacionesPendientes = []; // [{ placa, timestamp }]
 let respuestas = {}; // { 'ABC123': { valor, resumenHTML } ]
 let usuarios = {
   admin: 'Admin2025.' // Usuario principal
 };
-let usuariosActivos = []; // Lista de usuarios activos para repartir placas
-let indiceAsignacion = 0;
 
 app.use(cors());
 app.use(express.json());
 
-// 1. Cliente envía placa → se guarda y se asigna a un usuario activo
+// 1. Cliente envía placa → se guarda
 app.post('/solicitar', (req, res) => {
   const { placa } = req.body;
-  if (!placa) {
-    return res.status(400).json({ error: 'Placa requerida' });
+  if (placa) {
+    cotizacionesPendientes.push({ placa, timestamp: Date.now() });
+    res.json({ status: 'ok' });
+  } else {
+    res.status(400).json({ error: 'Placa requerida' });
   }
-
-  let asignadoA = null;
-  if (usuariosActivos.length > 0) {
-    asignadoA = usuariosActivos[indiceAsignacion % usuariosActivos.length];
-    indiceAsignacion++;
-  }
-
-  cotizacionesPendientes.push({ placa, timestamp: Date.now(), asignadoA });
-  res.json({ status: 'ok', asignadoA });
 });
 
-// 2. Devuelve placas asignadas al usuario (o todas si es admin)
+// 2. Admin consulta placas pendientes
 app.get('/pendientes', (req, res) => {
-  const usuario = req.query.usuario;
-  if (!usuario) return res.status(400).json({ error: 'Usuario requerido' });
-
-  if (usuario === 'admin') {
-    return res.json(cotizacionesPendientes);
-  }
-
-  const propias = cotizacionesPendientes.filter(p => p.asignadoA === usuario);
-  res.json(propias);
+  res.json(cotizacionesPendientes);
 });
 
-// 3. Admin o usuario responde con valor y resumen
+// 3. Admin responde con valor y resumen
 app.post('/responder', (req, res) => {
   const { placa, valor, resumenHTML } = req.body;
   if (placa && valor && resumenHTML) {
@@ -108,40 +92,18 @@ app.delete('/usuarios/:usuario', (req, res) => {
   }
   if (usuarios[usuario]) {
     delete usuarios[usuario];
-    usuariosActivos = usuariosActivos.filter(u => u !== usuario); // también lo sacamos de activos
     res.json({ status: 'usuario eliminado' });
   } else {
     res.status(404).json({ error: 'Usuario no encontrado' });
   }
 });
 
-// 10. 🟢 Establecer lista de usuarios activos (solo admin)
-app.post('/activos', (req, res) => {
-  const { activos } = req.body;
-  if (!Array.isArray(activos)) {
-    return res.status(400).json({ error: 'Formato incorrecto' });
-  }
-
-  // Validar que todos existan
-  const validos = activos.every(u => usuarios[u]);
-  if (!validos) {
-    return res.status(400).json({ error: 'Uno o más usuarios no existen' });
-  }
-
-  usuariosActivos = activos;
-  res.json({ status: 'usuarios activos actualizados' });
-});
-
-// 11. 📋 Obtener usuarios activos
-app.get('/activos', (req, res) => {
-  res.json(usuariosActivos);
-});
-
 // ✅ Railway: usar el puerto dinámico
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Servidor escuchando en el puerto ${PORT}`);
+  console.log(✅ Servidor escuchando en el puerto ${PORT});
 });
+
 
 
 
